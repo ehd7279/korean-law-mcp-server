@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "korean-law-mcp --transport sse"
+    "start": "npx korean-law-mcp --transport sse"
   },
   "dependencies": {
-    "korean-law-mcp": "^0.1.0"
+    "korean-law-mcp": "latest"
   }
 }
