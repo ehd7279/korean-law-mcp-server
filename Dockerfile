@@ -2,12 +2,12 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# 글로벌 설치 대신 package.json으로 설치 및 실행
-COPY package*.json ./
-RUN npm install
+# korean-law-mcp 패키지 패치 및 전역 설치
+RUN npm install -g korean-law-mcp
 
-# Render가 지정하는 PORT 사용
+# Render 기본 포트 설정
 ENV PORT=10000
 EXPOSE 10000
 
-CMD ["npx", "korean-law-mcp", "--transport", "sse"]
+# SSE 모드로 서버 실행 (Render 포트 환경변수 적용)
+CMD ["sh", "-c", "korean-law-mcp --transport sse --port $PORT"]
