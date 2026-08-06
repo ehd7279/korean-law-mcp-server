@@ -1,0 +1,11 @@
+{
+  "name": "korean-law-mcp-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx korean-law-mcp --transport sse --port $PORT"
+  },
+  "dependencies": {
+    "korean-law-mcp": "latest"
+  }
+}
