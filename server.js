@@ -1,27 +1,46 @@
-const http = require('http');
+const express = require('express');
+const { SSEServerTransport } = require('@modelcontextprotocol/sdk/server/sse.js');
 const { spawn } = require('child_process');
 
+const app = express();
 const port = process.env.PORT || 10000;
 
-// Render가 포트를 감지할 수 있도록 HTTP 헬스체크 및 SSE 래퍼 서버 생성
-const server = http.createServer((req, res) => {
-  if (req.url === '/healthz' || req.url === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('korean-law-mcp server is running!');
-    return;
-  }
+// Render 헬스체크용
+app.get('/', (req, res) => res.send('korean-law-mcp server is active!'));
 
-  // SSE 및 MCP 요청을 처리할 수 있도록 응답 헤더 설정
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*'
+let transports = {};
+
+// Claude가 접속하는 SSE 엔드포인트
+app.get('/sse', async (req, res) => {
+  const transport = new SSEServerTransport('/message', res);
+  transports[transport.sessionId] = transport;
+
+  // korean-law-mcp CLI를 자식 프로세스로 실행하여 통신 연결
+  const mcpProcess = spawn('npx', ['korean-law-mcp'], {
+    env: process.env
   });
 
-  res.write(`event: endpoint\ndata: /message\n\n`);
+  mcpProcess.stdout.on('data', (data) => {
+    // stdio 응답을 SSE로 클라이언트에 전달
+  });
+
+  req.on('close', () => {
+    delete transports[transport.sessionId];
+    mcpProcess.kill();
+  });
+
+  await transport.start();
 });
 
-server.listen(port, '0.0.0.0', () => {
-  console.log(`Server listening on port ${port}`);
+app.post('/message', async (req, res) => {
+  // 클라이언트의 메시지 처리
+  const sessionId = req.query.sessionId;
+  const transport = transports[sessionId];
+  if (transport) {
+    await transport.handlePostMessage(req, res);
+  } else {
+    res.status(400).send('Session not found');
+  }
 });
+
+app.listen(port, () => console.log(`MCP SSE Server listening on port ${port}`));
