@@ -1,11 +1,13 @@
 {
   "name": "korean-law-mcp-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "npx korean-law-mcp --transport sse"
+    "start": "node server.js"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "express": "^4.19.2",
     "korean-law-mcp": "latest"
   }
 }
